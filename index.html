@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رسالتك 💜</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+<header class="top">
+    <a href="/" class="brand">رسالتك 💜</a>
+</header>
+
+{% with messages = get_flashed_messages() %}
+{% if messages %}
+<div class="alerts">
+    {% for item in messages %}
+    <div class="alert">{{ item }}</div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+
+
+{% if page == "home" %}
+
+<main class="screen">
+
+    <div class="main-icon">💌</div>
+
+    <h1>رسالتك</h1>
+
+    <p class="subtitle">كل رسالة لها حكاية جميلة</p>
+
+    <div class="main-buttons">
+        <a href="/create" class="main-btn">✍️ إنشاء رسالة</a>
+        <a href="/search" class="main-btn">🔍 البحث عن رسالة</a>
+        <a href="/search" class="main-btn back-btn">الرجوع للرئيسية</a>
+    </div>
+
+</main>
+
+
+{% elif page == "create" %}
+
+<main class="screen form-screen">
+
+    <a href="/" class="back">← الرئيسية</a>
+
+    <div class="main-icon small-icon">💌</div>
+
+    <h1>إنشاء رسالة</h1>
+
+    <p class="subtitle">اختار المناسبة اللي عايز تبعت رسالتك فيها</p>
+
+    <form action="/create" method="POST" enctype="multipart/form-data">
+
+        <div class="occasion-grid">
+
+            {% for key, value in types.items() %}
+            <label class="occasion">
+                <input type="radio" name="kind" value="{{ key }}" required>
+                <span>{{ value }}</span>
+            </label>
+            {% endfor %}
+
+        </div>
+
+        <div id="messageFields" class="hidden">
+
+            <label>اسم الشخص اللي هتبعت له</label>
+            <input type="text" name="recipient" placeholder="اكتب الاسم" required>
+
+            <label>عنوان الرسالة</label>
+            <input type="text" name="title" placeholder="مثلاً: كل سنة وأنت طيب" required>
+
+            <label>اكتب رسالتك</label>
+            <textarea name="content" rows="6" placeholder="اكتب رسالتك هنا..." required></textarea>
+
+            <label>حط صورة الرسالة</label>
+
+            <div class="upload">
+                <div>📷</div>
+                <p>اختار صورة من جهازك</p>
+                <input type="file" name="image" id="image" accept="image/*" required>
+                <img id="preview" alt="معاينة الصورة">
+            </div>
+
+            <label>كلمة مرور الرسالة</label>
+            <input type="password" name="password" minlength="6" placeholder="اكتب كلمة المرور" required>
+
+            <button class="main-btn submit-btn" type="submit">
+                إنشاء الرسالة 💜
+            </button>
+
+        </div>
+
+    </form>
+
+</main>
+
+
+{% elif page == "created" %}
+
+<main class="screen">
+
+    <div class="main-icon">🎉</div>
+
+    <h1>رسالتك اتعملت بنجاح</h1>
+
+    <p class="subtitle">انسخ الرابط وابعته للشخص المقصود</p>
+
+    <div class="link-box">
+        <input id="messageLink" readonly value="{{ request.url_root }}message/{{ message_id }}">
+        <button onclick="copyLink()">نسخ</button>
+    </div>
+
+    <a href="/" class="main-btn">العودة للرئيسية</a>
+
+</main>
+
+
+{% elif page == "search" %}
+
+<main class="screen">
+
+    <a href="/" class="back">← الرئيسية</a>
+
+    <div class="main-icon small-icon">🔍</div>
+
+    <h1>البحث عن رسالة</h1>
+
+    <p class="subtitle">اكتب اسم الشخص أو عنوان الرسالة</p>
+
+    <form method="POST" class="search-form">
+        <input type="text" name="query" placeholder="ابحث هنا..." required>
+        <button class="main-btn" type="submit">بحث</button>
+    </form>
+
+</main>
+
+
+{% elif page == "results" %}
+
+<main class="screen results-screen">
+
+    <a href="/search" class="back">← بحث جديد</a>
+
+    <h1>نتائج البحث</h1>
+
+    <p class="subtitle">اختار الرسالة المطلوبة</p>
+
+    {% if results %}
+
+    <div class="results">
+
+        {% for item in results %}
+
+        <a href="/message/{{ item['id'] }}" class="result-card">
+
+            <img src="/image/{{ item['id'] }}" alt="صورة الرسالة">
+
+            <div>
+                <h3>{{ item['title'] }}</h3>
+                <p>إلى: {{ item['recipient'] }}</p>
+                <small>{{ types[item['message_type']] }}</small>
+            </div>
+
+        </a>
+
+        {% endfor %}
+
+    </div>
+
+    {% else %}
+
+    <p class="empty">ملقيناش رسالة بالاسم ده.</p>
+
+    {% endif %}
+
+</main>
+
+
+{% elif page == "message" %}
+
+<main class="screen">
+
+    <a href="/" class="back">← الرئيسية</a>
+
+    {% if not unlocked %}
+
+        <div class="main-icon">🔒</div>
+
+        <h1>رسالة خاصة</h1>
+
+        <p class="subtitle">الرسالة دي محتاجة كلمة مرور</p>
+
+        <form method="POST" class="password-form">
+            <input type="password" name="password" placeholder="أدخل كلمة المرور" required autofocus>
+            <button class="main-btn" type="submit">فتح الرسالة 💜</button>
+        </form>
+
+    {% else %}
+
+        <div class="main-icon">💌</div>
+
+        <h1>{{ msg['title'] }}</h1>
+
+        <p class="subtitle">رسالة خاصة إليك</p>
+
+        <div class="opened-message">
+            <div id="typedText" data-text="{{ msg['content'] | e }}"></div>
+        </div>
+
+    {% endif %}
+
+</main>
+
+{% endif %}
+
+
+<script src="/script.js"></script>
+
+</body>
+</html>
